@@ -27,14 +27,6 @@ jobs:
             arch: armeabi-v7a
             clang: armv7a-linux-androideabi28-clang
             neon: "true"
-          - target: x86_64-linux-android
-            arch: x86_64
-            clang: x86_64-linux-android28-clang
-            neon: "false"
-          - target: i686-linux-android
-            arch: x86
-            clang: i686-linux-android28-clang
-            neon: "false"
 
     steps:
       - name: Checkout
@@ -85,14 +77,6 @@ jobs:
           linker = "${TOOLCHAIN}/armv7a-linux-androideabi28-clang"
           ar = "${TOOLCHAIN}/llvm-ar"
 
-          [target.x86_64-linux-android]
-          linker = "${TOOLCHAIN}/x86_64-linux-android28-clang"
-          ar = "${TOOLCHAIN}/llvm-ar"
-
-          [target.i686-linux-android]
-          linker = "${TOOLCHAIN}/i686-linux-android28-clang"
-          ar = "${TOOLCHAIN}/llvm-ar"
-
           [build]
           rustflags = [
             "-C", "link-arg=-Wl,--no-rosegment",
@@ -111,12 +95,7 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
           PKG_CONFIG_ALLOW_CROSS: "1"
           PKG_CONFIG_PATH: ""
-          RUSTFLAGS: >-
-            ${{ matrix.neon == 'true' && '-C target-feature=+neon' || '' }}
-            -C opt-level=3
-            -C lto=fat
-            -C codegen-units=1
-            -C panic=abort
+          RUSTFLAGS: "-C target-feature=+neon -C opt-level=3 -C lto=fat -C codegen-units=1 -C panic=abort"
         run: |
           cargo build --target ${{ matrix.target }} --release
 
@@ -126,10 +105,9 @@ jobs:
           BIN="target/${{ matrix.target }}/release/pumpkin"
           if [ -f "$BIN" ]; then
             "$STRIP" "$BIN"
-            echo "Size after strip:"
             ls -lah "$BIN"
           else
-            echo "Binary not found, listing release dir:"
+            echo "Binary tidak ditemukan, isi release dir:"
             ls target/${{ matrix.target }}/release/ | head -20
           fi
 
